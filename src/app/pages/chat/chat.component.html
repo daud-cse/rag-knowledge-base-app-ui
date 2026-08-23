@@ -1,0 +1,184 @@
+<div class="chat-layout">
+  <!-- ------------------------- conversation rail ------------------------- -->
+  <aside class="rail">
+    <div class="rail-head">
+      <select [ngModel]="activeBotId()" (ngModelChange)="activeBotId.set($event); newConversation()"
+              name="bot" aria-label="Chatbot">
+        @for (bot of chatbots(); track bot.id) {
+          <option [value]="bot.id">{{ bot.name }}</option>
+        }
+      </select>
+      <button class="btn primary block" type="button" (click)="newConversation()">＋ New conversation</button>
+    </div>
+
+    <div class="rail-search">
+      <input type="search" placeholder="Search conversations…"
+             [ngModel]="search()" (ngModelChange)="onSearch($event)" name="search" />
+    </div>
+
+    <div class="rail-list">
+      @for (conversation of conversations(); track conversation.id) {
+        <div class="rail-item" [class.active]="conversation.id === activeConversationId()"
+             (click)="open(conversation)">
+          <span class="title truncate">{{ conversation.title }}</span>
+          <span class="meta">
+            {{ conversation.chatbotName }} · {{ conversation.messageCount }} msg ·
+            {{ conversation.updatedAt | date: 'MMM d, HH:mm' }}
+          </span>
+          <span class="row-actions">
+            <button class="btn ghost sm" type="button" title="Rename"
+                    (click)="$event.stopPropagation(); rename(conversation)">✎</button>
+            <button class="btn ghost sm" type="button" title="Delete"
+                    (click)="$event.stopPropagation(); remove(conversation)">🗑</button>
+          </span>
+        </div>
+      } @empty {
+        <p class="rail-empty">No conversations yet.</p>
+      }
+    </div>
+  </aside>
+
+  <!-- ----------------------------- transcript ---------------------------- -->
+  <section class="thread">
+    <header class="thread-head">
+      <div>
+        <h2>{{ activeConversation()?.title || activeBot()?.name || 'Chat' }}</h2>
+        <p class="muted small">
+          {{ activeBot()?.description || 'Select a chatbot to begin.' }}
+          @if (activeBot(); as bot) {
+            <span class="badge" style="margin-left:6px">{{ bot.model }}</span>
+            @if (bot.ragEnabled) { <span class="badge brand">RAG · top {{ bot.rerankTopN }}</span> }
+            @for (kb of bot.knowledgeBases; track kb.knowledgeBaseId) {
+              <span class="badge">{{ kb.name }}</span>
+            }
+          }
+        </p>
+      </div>
+      <div class="row">
+        @if (activeConversationId()) {
+          <button class="btn sm" type="button" (click)="regenerate()" [disabled]="sending()">↻ Regenerate</button>
+          <button class="btn sm" type="button" (click)="exportConversation()">⭳ Export</button>
+        }
+      </div>
+    </header>
+
+    <div class="messages" #scroller>
+      @if (!messages().length) {
+        <div class="welcome">
+          <div class="orb">🤖</div>
+          <h3>{{ activeBot()?.welcomeMessage || 'How can I help you today?' }}</h3>
+          <p class="muted">
+            Answers are grounded in the knowledge bases mapped to this chatbot, and every claim is
+            cited back to its source document.
+          </p>
+
+          @if (activeBot()?.suggestedQuestions?.length) {
+            <div class="starters">
+              @for (question of activeBot()!.suggestedQuestions; track question) {
+                <button class="starter" type="button" (click)="ask(question)">{{ question }}</button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @for (message of messages(); track message.id) {
+        <div class="message" [class.user]="message.role === 'User'">
+          <div class="avatar">{{ message.role === 'User' ? '🙂' : '🤖' }}</div>
+
+          <div class="bubble-wrap">
+            @if (message.pending) {
+              <div class="bubble thinking">
+                <span class="dot-flash"></span><span class="dot-flash"></span><span class="dot-flash"></span>
+                <span class="muted small">Retrieving and composing an answer…</span>
+              </div>
+            } @else {
+              <div class="bubble" [innerHTML]="render(message)"></div>
+
+              @if (message.role === 'Assistant') {
+                <div class="tools">
+                  @if (message.citations.length) {
+                    <button class="btn ghost sm" type="button" (click)="toggleCitations(message.id)">
+                      📎 {{ message.citations.length }} source{{ message.citations.length === 1 ? '' : 's' }}
+                    </button>
+                  }
+                  <button class="btn ghost sm" type="button" (click)="copy(message)">⧉ Copy</button>
+                  <button class="btn ghost sm" type="button" [class.on]="message.feedback === 'ThumbsUp'"
+                          (click)="rate(message, 'ThumbsUp')">👍</button>
+                  <button class="btn ghost sm" type="button" [class.on]="message.feedback === 'ThumbsDown'"
+                          (click)="rate(message, 'ThumbsDown')">👎</button>
+                  <span class="spacer"></span>
+                  <span class="muted small mono">
+                    {{ message.model }} · {{ message.latencyMs }} ms ·
+                    {{ message.promptTokens + message.completionTokens }} tok
+                  </span>
+                </div>
+
+                @if (message.citations.length && citationsOpen(message.id)) {
+                  <div class="citations">
+                    @for (citation of message.citations; track citation.index) {
+                      <div class="citation">
+                        <span class="num">{{ citation.index }}</span>
+                        <div>
+                          <strong>{{ citationLabel(citation) }}</strong>
+                          <span class="muted small"> · {{ citation.knowledgeBase }} · score
+                            {{ citation.score | number: '1.2-2' }}</span>
+                          <p class="snippet">{{ citation.snippet }}</p>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            }
+          </div>
+        </div>
+      }
+
+      @if (followUps().length) {
+        <div class="followups">
+          <span class="label" style="margin:0 4px 0 0">Follow up</span>
+          @for (question of followUps(); track question) {
+            <button class="starter sm" type="button" (click)="ask(question)">{{ question }}</button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ---------------------------- composer ---------------------------- -->
+    <footer class="composer">
+      @if (attachments().length) {
+        <div class="attachments">
+          @for (file of attachments(); track file.id) {
+            <span class="badge" [class.good]="file.status === 'Indexed'"
+                  [class.bad]="file.status === 'Failed'"
+                  [class.warn]="file.status !== 'Indexed' && file.status !== 'Failed'">
+              📄 {{ file.fileName }} · {{ file.status }}
+            </span>
+          }
+          <span class="muted small">Private to this conversation.</span>
+        </div>
+      }
+
+      <div class="composer-box">
+        <textarea [(ngModel)]="draft" name="draft" rows="1"
+                  placeholder="Ask a question about your documents…"
+                  (keydown.enter)="$event.preventDefault(); send()"></textarea>
+
+        <div class="composer-actions">
+          @if (activeBot()?.allowUserUpload) {
+            <button class="btn ghost sm" type="button" (click)="pickFiles()" title="Attach a file to this chat">📎</button>
+            <input #fileInput type="file" multiple hidden (change)="onFiles($event)"
+                   accept=".pdf,.docx,.xlsx,.pptx,.txt,.md,.csv,.json,.html,.htm,.log,.xml" />
+          }
+          <button class="btn primary" type="button" (click)="send()" [disabled]="sending() || !draft.trim()">
+            @if (sending()) { <span class="spinner"></span> } @else { Send }
+          </button>
+        </div>
+      </div>
+      <p class="composer-hint muted small">
+        Enter sends · answers cite their sources · uploads stay private to this conversation
+      </p>
+    </footer>
+  </section>
+</div>

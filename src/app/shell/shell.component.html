@@ -1,0 +1,95 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo">U</span>
+      <span class="brand-text">
+        <strong>Uttor AI</strong>
+        <small>Enterprise RAG</small>
+      </span>
+      <button class="collapse" type="button" (click)="collapsed.set(!collapsed())"
+              [attr.aria-label]="collapsed() ? 'Expand navigation' : 'Collapse navigation'">
+        {{ collapsed() ? '»' : '«' }}
+      </button>
+    </div>
+
+    <nav>
+      <p class="section">Workspace</p>
+      @for (item of visible(workspace); track item.link) {
+        <a [routerLink]="item.link" routerLinkActive="active" [title]="item.label">
+          <span class="icon">{{ item.icon }}</span>
+          <span class="text">{{ item.label }}</span>
+        </a>
+      }
+
+      @if (visible(administration).length) {
+        <p class="section">Administration</p>
+        @for (item of visible(administration); track item.link) {
+          <a [routerLink]="item.link" routerLinkActive="active" [title]="item.label">
+            <span class="icon">{{ item.icon }}</span>
+            <span class="text">{{ item.label }}</span>
+          </a>
+        }
+      }
+    </nav>
+
+    <div class="sidebar-foot">
+      @if (status(); as s) {
+        <div class="provider" [title]="s.notice ?? 'LLM provider connected'">
+          <span class="dot" [class.live]="s.liveLlm"></span>
+          <span class="text">
+            <strong>{{ s.liveLlm ? 'LLM connected' : 'Local engine' }}</strong>
+            <small>{{ s.vectorStore }}</small>
+          </span>
+        </div>
+      }
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="tenant">
+        <span class="badge brand">{{ auth.user()?.tenantName }}</span>
+        <span class="badge" [class.good]="!isPersonal()">
+          {{ isPersonal() ? '👤 Personal workspace' : '🏢 Company' }}
+        </span>
+        @if (!isPersonal()) {
+          <span class="muted small">Clearance: {{ auth.user()?.maxClassification }}</span>
+        }
+      </div>
+      <div class="spacer"></div>
+
+      <div class="user" (click)="menuOpen.set(!menuOpen())" tabindex="0" role="button"
+           (keydown.enter)="menuOpen.set(!menuOpen())">
+        <span class="avatar">{{ initials(auth.user()?.displayName) }}</span>
+        <span class="who">
+          <strong>{{ auth.user()?.displayName }}</strong>
+          <small>{{ auth.user()?.role }}</small>
+        </span>
+        <span class="caret">▾</span>
+
+        @if (menuOpen()) {
+          <div class="menu" (click)="$event.stopPropagation()">
+            <div class="menu-head">
+              <strong>{{ auth.user()?.email }}</strong>
+              <small>{{ auth.user()?.department || 'No department' }} · signed in via
+                {{ auth.user()?.identityProvider }}</small>
+            </div>
+            <button class="btn ghost block" type="button" (click)="auth.logout()">Sign out</button>
+          </div>
+        }
+      </div>
+    </header>
+
+    @if (status(); as s) {
+      @if (s.notice) {
+        <div class="banner">
+          <strong>Demo mode.</strong> {{ s.notice }}
+        </div>
+      }
+    }
+
+    <div class="content" (click)="menuOpen.set(false)">
+      <router-outlet />
+    </div>
+  </div>
+</div>

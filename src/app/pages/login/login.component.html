@@ -1,0 +1,102 @@
+<div class="auth">
+  <section class="pitch">
+    <div class="mark"><span>U</span> Uttor AI</div>
+    <h1>Enterprise Retrieval-Augmented Generation</h1>
+    <p>
+      Multi-tenant chatbots grounded in your own documents, with role-based access control,
+      document-level security trimming, citations and a full audit trail.
+    </p>
+
+    <ul class="features">
+      <li><span>🏢</span> Company isolation at database, storage, index and API level</li>
+      <li><span>🔐</span> RBAC plus per-document classification and security trimming</li>
+      <li><span>📚</span> PDF, Word, Excel, PowerPoint, CSV, HTML and text ingestion</li>
+      <li><span>🔎</span> Hybrid search, reranking and cited answers</li>
+    </ul>
+
+    @if (status(); as s) {
+      <div class="stack">
+        <span class="chip">Database: {{ s.database }}</span>
+        <span class="chip">Vectors: {{ s.vectorStore }}</span>
+        <span class="chip">Storage: {{ s.storage }}</span>
+        <span class="chip" [class.live]="s.liveLlm">LLM: {{ s.llm }}</span>
+      </div>
+    }
+  </section>
+
+  <section class="form-side">
+    <div class="form-card">
+      <h2>Sign in</h2>
+      <p class="muted small">
+        Company or personal account. New here?
+        <a routerLink="/signup">Create a workspace</a>
+      </p>
+
+      @if (providers(); as p) {
+        <div class="sso" [class.busy]="ssoBusy()">
+          <!-- Google renders its own button into this host, as its terms require. -->
+          <div #googleHost class="google-host" [hidden]="!p.google"></div>
+
+          @if (p.entraId) {
+            <button class="btn block ms" type="button" (click)="signInWithMicrosoft()"
+                    [disabled]="ssoBusy()">
+              <span class="ms-logo" aria-hidden="true">
+                <i style="background:#f25022"></i><i style="background:#7fba00"></i>
+                <i style="background:#00a4ef"></i><i style="background:#ffb900"></i>
+              </span>
+              Continue with Microsoft
+            </button>
+          }
+
+          @if (p.saml) {
+            <button class="btn block" type="button" disabled>Continue with SAML SSO</button>
+          }
+
+          @if (ssoBusy()) {
+            <p class="muted small" style="text-align:center;margin:8px 0 0">
+              <span class="spinner"></span> Signing you in…
+            </p>
+          }
+
+          @if (p.google || p.entraId || p.saml) {
+            <div class="divider"><span>or use your email</span></div>
+          }
+        </div>
+      }
+
+      <form (ngSubmit)="submit()">
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="email" [(ngModel)]="email" autocomplete="username" required />
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <input type="password" name="password" [(ngModel)]="password"
+                 autocomplete="current-password" required />
+        </label>
+
+        @if (error(); as message) {
+          <div class="error">{{ message }}</div>
+        }
+
+        <button class="btn primary block" type="submit" [disabled]="busy()">
+          @if (busy()) { <span class="spinner"></span> Signing in… } @else { Sign in }
+        </button>
+      </form>
+
+      <div class="demo">
+        <p class="label">Demo accounts · password <code>Passw0rd!</code></p>
+        @for (account of demoAccounts; track account.email) {
+          <button class="demo-row" type="button" (click)="use(account)">
+            <span class="who">
+              <strong>{{ account.role }}</strong>
+              <small>{{ account.email }}</small>
+            </span>
+            <span class="blurb">{{ account.blurb }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+</div>

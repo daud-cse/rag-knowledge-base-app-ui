@@ -1,0 +1,100 @@
+<div class="auth">
+  <section class="pitch">
+    <div class="mark"><span>U</span> Uttor AI</div>
+    <h1>Two ways to work</h1>
+    <p>
+      Start a personal workspace for yourself in seconds, or set up a company where you invite
+      colleagues, publish shared knowledge bases and control who can read what.
+    </p>
+
+    <ul class="features">
+      <li><span>👤</span> <strong>Personal</strong> — your own chatbots, documents and conversations, private to you</li>
+      <li><span>🏢</span> <strong>Company</strong> — invite employees, assign roles, share knowledge bases</li>
+      <li><span>🔒</span> Either way your data lives in its own tenant, isolated at every layer</li>
+      <li><span>↗</span> A personal workspace can move to a company later without losing anything</li>
+    </ul>
+  </section>
+
+  <section class="form-side">
+    <div class="form-card">
+      <h2>Create your workspace</h2>
+      <p class="muted small">Already have an account? <a routerLink="/login">Sign in</a></p>
+
+      <div class="type-picker">
+        <button type="button" class="type" [class.selected]="accountType() === 'Personal'"
+                (click)="choose('Personal')">
+          <span class="type-icon">👤</span>
+          <strong>Just me</strong>
+          <small>A private workspace for one person</small>
+        </button>
+
+        <button type="button" class="type" [class.selected]="accountType() === 'Company'"
+                (click)="choose('Company')"
+                [disabled]="providers() && !providers()!.companySignup">
+          <span class="type-icon">🏢</span>
+          <strong>My company</strong>
+          <small>Invite a team and share knowledge</small>
+        </button>
+      </div>
+
+      <form (ngSubmit)="submit()">
+        @if (accountType() === 'Company') {
+          <label class="field">
+            <span>Company name</span>
+            <input type="text" name="companyName" [(ngModel)]="companyName"
+                   placeholder="ABC Healthcare" />
+          </label>
+
+          <label class="field">
+            <span>Employee email domains <em class="optional">optional</em></span>
+            <input type="text" name="allowedEmailDomains" [(ngModel)]="allowedEmailDomains"
+                   placeholder="abchealthcare.com" />
+            <span class="hint">
+              Colleagues signing in with Google or Microsoft on these domains join your company
+              automatically, as normal users.
+            </span>
+          </label>
+        }
+
+        <label class="field">
+          <span>Your name</span>
+          <input type="text" name="displayName" [(ngModel)]="displayName" autocomplete="name" />
+        </label>
+
+        <label class="field">
+          <span>{{ accountType() === 'Company' ? 'Work email' : 'Email' }}</span>
+          <input type="email" name="email" [(ngModel)]="email" autocomplete="username" required />
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <input type="password" name="password" [(ngModel)]="password"
+                 autocomplete="new-password" required />
+          <span class="hint">At least 8 characters.</span>
+        </label>
+
+        @if (error(); as message) {
+          <div class="error">{{ message }}</div>
+        }
+
+        <button class="btn primary block" type="submit" [disabled]="busy()">
+          @if (busy()) {
+            <span class="spinner"></span> Creating…
+          } @else {
+            {{ accountType() === 'Company' ? 'Create company workspace' : 'Create my workspace' }}
+          }
+        </button>
+      </form>
+
+      @if (providers(); as p) {
+        @if (p.google || p.entraId) {
+          <div class="divider" style="margin-top:20px"><span>or</span></div>
+          <p class="muted small" style="text-align:center">
+            <a routerLink="/login">Continue with Google or Microsoft</a> — signing in with an account
+            we have not seen before creates a personal workspace for you automatically.
+          </p>
+        }
+      }
+    </div>
+  </section>
+</div>
