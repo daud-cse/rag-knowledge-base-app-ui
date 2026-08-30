@@ -6,8 +6,8 @@ import { AuthProviders, LoginResponse } from './models';
 declare const google: any;
 
 const GSI_SRC = 'https://accounts.google.com/gsi/client';
-const TOKEN_KEY = 'uttor.token';
-const USER_KEY = 'uttor.user';
+const TOKEN_KEY = 'ragkb.token';
+const USER_KEY = 'ragkb.user';
 
 /**
  * Both providers use the same shape: the browser obtains an ID token from the identity provider,

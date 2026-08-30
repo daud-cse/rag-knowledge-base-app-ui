@@ -1,0 +1,23 @@
+name: deploy-ui
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and deploy to Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_SWA_TOKEN }}
+          action: upload
+          app_location: "/"
+          # Angular 18's `application` builder emits to dist/<project>/browser,
+          # not dist/<project>. A wrong path here deploys an empty site.
+          output_location: "dist/ui/browser"
+          skip_api_build: true

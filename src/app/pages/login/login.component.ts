@@ -39,7 +39,7 @@ export class LoginComponent implements AfterViewInit {
   readonly status = signal<ProviderStatus | null>(null);
 
   readonly demoAccounts: DemoAccount[] = [
-    { email: 'super@uttor.ai', role: 'Super Admin', blurb: 'Manages companies across the platform.' },
+    { email: 'super@ragkb.app', role: 'Super Admin', blurb: 'Manages companies across the platform.' },
     { email: 'admin@contoso.com', role: 'Company Admin', blurb: 'Full access inside Contoso Health.' },
     { email: 'knowledge@contoso.com', role: 'Knowledge Admin', blurb: 'Owns knowledge bases and documents.' },
     { email: 'user@contoso.com', role: 'User', blurb: 'Chat only, Internal clearance.' }

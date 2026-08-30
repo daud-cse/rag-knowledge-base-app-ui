@@ -73,8 +73,8 @@ export class SignupComponent {
     }).subscribe({
       next: (response: LoginResponse) => {
         // The API returns a session with the account, so there is no second sign-in step.
-        localStorage.setItem('uttor.token', response.accessToken);
-        localStorage.setItem('uttor.user', JSON.stringify(response.user));
+        localStorage.setItem('ragkb.token', response.accessToken);
+        localStorage.setItem('ragkb.user', JSON.stringify(response.user));
         this.auth.user.set(response.user);
         this.router.navigate(['/chat']);
       },

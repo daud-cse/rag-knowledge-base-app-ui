@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
+import { environment } from '../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
@@ -11,9 +12,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
 
   const token = auth.token;
-  const request = token && req.url.startsWith('/api')
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-    : req;
+  // In dev apiBase is empty and the dev-server proxy handles /api. In production the UI is served
+  // from Static Web Apps and the API lives on its own Container Apps origin, so /api is rewritten
+  // to an absolute URL. The startsWith('/api') test still gates the token, so it never leaves our API.
+  const isApi = req.url.startsWith('/api');
+  const url = isApi ? environment.apiBase + req.url : req.url;
+  const request = token && isApi
+    ? req.clone({ url, setHeaders: { Authorization: `Bearer ${token}` } })
+    : req.clone({ url });
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {

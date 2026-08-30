@@ -1,4 +1,4 @@
-# Uttor AI — Enterprise RAG UI
+# RAG Knowledge Base — Enterprise RAG UI
 
 The **Angular 18** front end of a multi-tenant, retrieval-augmented generation platform.
 
@@ -25,7 +25,7 @@ no CORS to configure in development.
 
 | Account | Role | Sees |
 |---|---|---|
-| `super@uttor.ai` | Super Admin | Every workspace on the platform |
+| `super@ragkb.app` | Super Admin | Every workspace on the platform |
 | `admin@contoso.com` | Company Admin | Users, roles, audit log, all of the below |
 | `knowledge@contoso.com` | Knowledge Admin | Company knowledge bases and documents |
 | `user@contoso.com` | User | Chat only, Internal clearance |

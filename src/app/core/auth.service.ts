@@ -5,8 +5,8 @@ import { Observable, tap } from 'rxjs';
 import { SsoService } from './sso.service';
 import { AuthProviders, LoginResponse, Me, Role, ROLE_RANK } from './models';
 
-const TOKEN_KEY = 'uttor.token';
-const USER_KEY = 'uttor.user';
+const TOKEN_KEY = 'ragkb.token';
+const USER_KEY = 'ragkb.user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
