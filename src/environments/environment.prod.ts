@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  /** Container Apps ingress FQDN. Replace after `az containerapp create`:
-   *  az containerapp show -n ragkb-api -g rag_knowledge_base_app \
-   *    --query properties.configuration.ingress.fqdn -o tsv          */
-  apiBase: 'https://REPLACE-WITH-CONTAINER-APP-FQDN'
+  /** Container Apps ingress for ragkb-api (Central US).
+   *  Static Web Apps Free cannot proxy to Container Apps, so the browser calls
+   *  this origin directly and the API allows it via Cors__Origins__0.         */
+  apiBase: 'https://ragkb-api.yellowfield-bdf43b6f.centralus.azurecontainerapps.io'
 };
