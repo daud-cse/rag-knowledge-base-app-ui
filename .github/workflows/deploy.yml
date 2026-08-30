@@ -20,4 +20,3 @@ jobs:
           # Angular 18's `application` builder emits to dist/<project>/browser,
           # not dist/<project>. A wrong path here deploys an empty site.
           output_location: "dist/ui/browser"
-          skip_api_build: true
