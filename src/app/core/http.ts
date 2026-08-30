@@ -29,6 +29,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         toast.error('Your session expired. Please sign in again.');
       } else if (error.status === 403) {
         toast.error('Your role does not allow that action.');
+      } else if (error.status === 429) {
+        // The daily token allowance. The API sends a message explaining how much is left and
+        // when it resets, so show that rather than a generic "too many requests".
+        toast.error(apiMessage(error, 'Your token limit is exceeded for today.'));
       } else if (error.status === 0) {
         toast.error('Cannot reach the API. Is it running?');
       }
