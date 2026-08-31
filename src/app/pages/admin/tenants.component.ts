@@ -94,11 +94,11 @@ import { Tenant } from '../../core/models';
             <div class="grid cols-2">
               <label class="field">
                 <span class="label">Company name</span>
-                <input type="text" [(ngModel)]="form.name" name="name" placeholder="Northwind Insurance" />
+                <input type="text" [(ngModel)]="form.name" name="name" placeholder="Acme Corporation" />
               </label>
               <label class="field">
                 <span class="label">Slug</span>
-                <input type="text" [(ngModel)]="form.slug" name="slug" placeholder="northwind" />
+                <input type="text" [(ngModel)]="form.slug" name="slug" placeholder="acme" />
                 <span class="hint">Lower-case identifier used in storage and index keys.</span>
               </label>
             </div>
@@ -111,7 +111,7 @@ import { Tenant } from '../../core/models';
             <label class="field">
               <span class="label">Allowed email domains (SSO)</span>
               <input type="text" [(ngModel)]="form.allowedEmailDomains" name="allowedEmailDomains"
-                     placeholder="contoso.com, contoso-health.com" />
+                     placeholder="acme.com, acme.co.uk" />
               <span class="hint">
                 Someone signing in with Google or Microsoft whose email ends in one of these domains
                 is placed into this company as a normal User. Leave empty to require that an

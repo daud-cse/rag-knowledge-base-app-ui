@@ -94,7 +94,7 @@ type Tab = 'general' | 'rag' | 'knowledge' | 'chat';
               @case ('general') {
                 <label class="field">
                   <span class="label">Name</span>
-                  <input type="text" [(ngModel)]="form.name" name="name" placeholder="Healthcare Claims Assistant" />
+                  <input type="text" [(ngModel)]="form.name" name="name" placeholder="Support Assistant" />
                 </label>
                 <label class="field">
                   <span class="label">Description</span>

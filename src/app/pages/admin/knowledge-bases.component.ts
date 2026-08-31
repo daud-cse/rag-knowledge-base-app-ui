@@ -88,7 +88,7 @@ import { KnowledgeBase } from '../../core/models';
           <div class="body">
             <label class="field">
               <span class="label">Name</span>
-              <input type="text" [(ngModel)]="form.name" name="name" placeholder="Healthcare Claims KB" />
+              <input type="text" [(ngModel)]="form.name" name="name" placeholder="Product Documentation" />
             </label>
 
             <label class="field">
