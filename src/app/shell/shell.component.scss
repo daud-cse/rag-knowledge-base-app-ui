@@ -206,3 +206,22 @@ nav {
   .shell .brand-text, .shell .section, .shell nav .text, .shell .provider .text { display: none; }
   .shell nav a { justify-content: center; }
 }
+
+@media (max-width: 560px) {
+  /* The tenant chips, clearance text and avatar were laid out on one fixed-height row, so on a
+     phone the right-hand end simply ran off the screen. Let the bar grow and scroll instead. */
+  .shell { grid-template-columns: 52px 1fr; }
+
+  .topbar {
+    height: auto;
+    min-height: 52px;
+    padding: 8px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .tenant { gap: 6px; min-width: 0; flex-wrap: wrap; }
+    .muted.small { font-size: 11px; }
+  }
+
+  .user { margin-left: auto; }
+}

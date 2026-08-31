@@ -329,7 +329,97 @@
 
 .composer-hint { max-width: 900px; margin: 7px auto 0; text-align: center; }
 
+/* The toggle and the scrim only exist on narrow screens. */
+.rail-toggle,
+.rail-close { display: none; }
+
+.rail-scrim { display: none; }
+
 @media (max-width: 900px) {
-  .chat-layout { grid-template-columns: 1fr; }
-  .rail { display: none; }
+  /* The rail used to be display:none here, which left no way at all to switch chatbot, start a
+     conversation or reopen an old one on a phone. It is now a slide-over drawer instead. */
+  .chat-layout { grid-template-columns: 1fr; position: relative; }
+
+  .rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    width: min(86vw, 320px);
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    box-shadow: 0 0 34px rgba(0, 0, 0, .22);
+    will-change: transform;
+  }
+
+  .rail-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 29;
+    background: rgba(15, 20, 30, .42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease;
+  }
+
+  .chat-layout.rail-open {
+    .rail { transform: translateX(0); }
+    .rail-scrim { opacity: 1; pointer-events: auto; }
+  }
+
+  .rail-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    margin-right: 2px;
+    font-size: 17px;
+    line-height: 1;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .rail-close {
+    display: block;
+    align-self: flex-end;
+    margin: 8px 8px -6px 0;
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  /* The header wrapped awkwardly once the toggle was added, and the badge row could push the
+     action buttons off-screen. */
+  .thread-head {
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+
+    h2 { font-size: 16px; }
+    .thread-title { min-width: 0; flex: 1 1 auto; }
+    p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  }
+}
+
+@media (max-width: 560px) {
+  .composer { padding: 10px 12px 12px; }
+  /* The placeholder was being clipped mid-word by a one-line box. */
+  .composer-box { gap: 6px; }
+  .composer-hint { font-size: 11px; }
+  .messages, .thread-body { padding-left: 12px; padding-right: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail, .rail-scrim { transition: none; }
 }

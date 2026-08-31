@@ -10,6 +10,21 @@ const TOKEN_KEY = 'ragkb.token';
 const USER_KEY = 'ragkb.user';
 
 /**
+ * Google refuses OAuth inside embedded webviews (`disallowed_useragent`), and some of them block
+ * its script outright. Detecting that lets us say "open this in your browser" instead of showing
+ * a failure the person cannot act on. Matching on user agent is imperfect by nature, so it only
+ * ever changes the wording of a message -- never whether sign-in is attempted.
+ */
+export function isEmbeddedBrowser(): boolean {
+  const ua = navigator.userAgent || '';
+  if (/(FBAN|FBAV|Instagram|Line|Twitter|WhatsApp|Snapchat|LinkedInApp|MicroMessenger)/i.test(ua))
+    return true;
+  // iOS in-app browsers are WebKit without "Safari"; Android ones announce "; wv".
+  const iosInApp = /iPhone|iPod|iPad/.test(ua) && /AppleWebKit/.test(ua) && !/Safari/.test(ua);
+  return iosInApp || /Android.*;\s*wv\)/.test(ua);
+}
+
+/**
  * Both providers use the same shape: the browser obtains an ID token from the identity provider,
  * the API verifies its signature and issues an application session. The API never trusts the
  * email the browser claims — only what the provider signed.
@@ -31,7 +46,11 @@ export class SsoService {
       script.async = true;
       script.defer = true;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Could not load Google sign-in.'));
+      script.onerror = () => reject(new Error(
+        isEmbeddedBrowser()
+          ? 'Google sign-in is blocked inside in-app browsers. Open this page in Safari or '
+            + 'Chrome, or use your email below.'
+          : 'Could not load Google sign-in. Check your connection, or use your email below.'));
       document.head.appendChild(script);
     });
     return this.gsiLoaded;
@@ -67,7 +86,10 @@ export class SsoService {
       // shows up as an empty gap where the button should be.
       requestAnimationFrame(() => {
         if (host.childElementCount === 0) {
-          onError('Google sign-in did not load. Reload the page, or use your email below.');
+          onError(isEmbeddedBrowser()
+            ? 'Google sign-in is blocked inside in-app browsers. Open this page in Safari or '
+              + 'Chrome, or use your email below.'
+            : 'Google sign-in did not load. Reload the page, or use your email below.');
         }
       });
     } catch (error) {

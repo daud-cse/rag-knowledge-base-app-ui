@@ -119,6 +119,11 @@
     justify-content: center;
     margin-bottom: 8px;
     min-height: 40px;
+
+    /* Once Google has failed there is nothing to reserve space for, and a 40px hole above the
+       divider reads as a broken layout rather than an absent option. */
+    &:empty { min-height: 0; margin-bottom: 0; }
+    &[hidden] { display: none; }
   }
 
   .btn.ms { justify-content: center; gap: 9px; }

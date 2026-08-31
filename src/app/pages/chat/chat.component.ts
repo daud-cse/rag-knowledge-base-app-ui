@@ -33,6 +33,8 @@ export class ChatComponent {
   readonly sending = signal(false);
   readonly loading = signal(true);
   readonly search = signal('');
+  /** Below 900px the conversation rail becomes a slide-over drawer; this is its open state. */
+  readonly railOpen = signal(false);
   readonly openCitations = signal<Set<string>>(new Set());
 
   draft = '';

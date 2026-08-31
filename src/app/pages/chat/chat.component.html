@@ -1,14 +1,21 @@
-<div class="chat-layout">
+<div class="chat-layout" [class.rail-open]="railOpen()">
+  <!-- Backdrop only exists on narrow screens, where the rail is a drawer. -->
+  <div class="rail-scrim" (click)="railOpen.set(false)" aria-hidden="true"></div>
+
   <!-- ------------------------- conversation rail ------------------------- -->
   <aside class="rail">
+    <button class="rail-close" type="button" (click)="railOpen.set(false)"
+            aria-label="Close conversations">✕</button>
     <div class="rail-head">
-      <select [ngModel]="activeBotId()" (ngModelChange)="activeBotId.set($event); newConversation()"
+      <select [ngModel]="activeBotId()"
+              (ngModelChange)="activeBotId.set($event); newConversation(); railOpen.set(false)"
               name="bot" aria-label="Chatbot">
         @for (bot of chatbots(); track bot.id) {
           <option [value]="bot.id">{{ bot.name }}</option>
         }
       </select>
-      <button class="btn primary block" type="button" (click)="newConversation()">＋ New conversation</button>
+      <button class="btn primary block" type="button"
+              (click)="newConversation(); railOpen.set(false)">＋ New conversation</button>
     </div>
 
     <div class="rail-search">
@@ -19,7 +26,7 @@
     <div class="rail-list">
       @for (conversation of conversations(); track conversation.id) {
         <div class="rail-item" [class.active]="conversation.id === activeConversationId()"
-             (click)="open(conversation)">
+             (click)="open(conversation); railOpen.set(false)">
           <span class="title truncate">{{ conversation.title }}</span>
           <span class="meta">
             {{ conversation.chatbotName }} · {{ conversation.messageCount }} msg ·
@@ -41,7 +48,9 @@
   <!-- ----------------------------- transcript ---------------------------- -->
   <section class="thread">
     <header class="thread-head">
-      <div>
+      <button class="rail-toggle" type="button" (click)="railOpen.set(true)"
+              aria-label="Conversations and chatbots">☰</button>
+      <div class="thread-title">
         <h2>{{ activeConversation()?.title || activeBot()?.name || 'Chat' }}</h2>
         <p class="muted small">
           {{ activeBot()?.description || 'Select a chatbot to begin.' }}
