@@ -187,9 +187,12 @@ export class ApiService {
       params: new HttpParams().set('days', days)
     });
   }
-  audit(page = 1, pageSize = 50, action?: string): Observable<Paged<AuditEntry>> {
+  audit(page = 1, pageSize = 50, action?: string, email?: string,
+        tenantId?: string): Observable<Paged<AuditEntry>> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (action) params = params.set('action', action);
+    if (email) params = params.set('email', email);
+    if (tenantId) params = params.set('tenantId', tenantId);
     return this.http.get<Paged<AuditEntry>>('/api/analytics/audit', { params });
   }
 }

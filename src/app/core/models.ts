@@ -232,6 +232,8 @@ export interface AuditEntry {
   details: string | null;
   ipAddress: string | null;
   timestamp: string;
+  /** Only populated for super admins, whose view spans every tenant. */
+  tenantName?: string | null;
 }
 
 export interface Paged<T> {
