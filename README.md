@@ -25,7 +25,6 @@ no CORS to configure in development.
 
 | Account | Role | Sees |
 |---|---|---|
-| `super@ragkb.app` | Super Admin | Every workspace on the platform |
 | `admin@contoso.com` | Company Admin | Users, roles, audit log, all of the below |
 | `knowledge@contoso.com` | Knowledge Admin | Company knowledge bases and documents |
 | `user@contoso.com` | User | Chat only, Internal clearance |
