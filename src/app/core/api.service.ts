@@ -187,6 +187,12 @@ export class ApiService {
       params: new HttpParams().set('days', days)
     });
   }
+  /** Readiness probe. Opens a database connection server-side, so a 200 means the API can
+   *  actually serve a sign-in — not merely that the container has started. */
+  ready(): Observable<{ ready: boolean }> {
+    return this.http.get<{ ready: boolean }>('/api/system/ready');
+  }
+
   audit(page = 1, pageSize = 50, action?: string, email?: string,
         tenantId?: string): Observable<Paged<AuditEntry>> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);

@@ -32,6 +32,28 @@
         <a routerLink="/signup">Create a workspace</a>
       </p>
 
+      @if (!apiReady() && !wakeFailed()) {
+        <div class="waking" role="status" aria-live="polite">
+          <span class="spinner"></span>
+          <div>
+            <strong>Starting the server…</strong>
+            <span class="muted small">
+              The API sleeps when idle to stay free, so the first visit takes up to a minute.
+              @if (wakeSeconds() > 4) { <span class="mono">{{ wakeSeconds() }}s</span> }
+            </span>
+          </div>
+        </div>
+      }
+
+      @if (wakeFailed()) {
+        <div class="error">
+          The API did not respond. It may still be starting — try again in a moment.
+          <button class="btn sm" type="button" (click)="retryWake()" style="margin-left:8px">
+            Retry
+          </button>
+        </div>
+      }
+
       @if (providers(); as p) {
         <div class="sso" [class.busy]="ssoBusy()">
           <!-- Google renders its own button into this host, as its terms require. -->
@@ -80,8 +102,10 @@
           <div class="error">{{ message }}</div>
         }
 
-        <button class="btn primary block" type="submit" [disabled]="busy()">
-          @if (busy()) { <span class="spinner"></span> Signing in… } @else { Sign in }
+        <button class="btn primary block" type="submit" [disabled]="busy() || !apiReady()">
+          @if (busy()) { <span class="spinner"></span> Signing in… }
+          @else if (!apiReady() && !wakeFailed()) { Waiting for the server… }
+          @else { Sign in }
         </button>
       </form>
 

@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { retry, timer } from 'rxjs';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
@@ -38,6 +39,12 @@ export class LoginComponent implements AfterViewInit {
   readonly providers = signal<AuthProviders | null>(null);
   readonly status = signal<ProviderStatus | null>(null);
 
+  /** False until the API has answered once. The API scales to zero, so the first visit of the day
+   *  has to wait for a container start and an Azure SQL resume. */
+  readonly apiReady = signal(false);
+  readonly wakeFailed = signal(false);
+  readonly wakeSeconds = signal(0);
+
   readonly demoAccounts: DemoAccount[] = [
     { email: 'admin@contoso.com', role: 'Company Admin', blurb: 'Full access inside Contoso Health.' },
     { email: 'knowledge@contoso.com', role: 'Knowledge Admin', blurb: 'Owns knowledge bases and documents.' },
@@ -45,18 +52,59 @@ export class LoginComponent implements AfterViewInit {
   ];
 
   constructor() {
-    this.api.status().subscribe({ next: s => this.status.set(s), error: () => undefined });
     if (this.auth.isAuthenticated()) this.router.navigate(['/chat']);
   }
 
   ngAfterViewInit(): void {
-    this.sso.providers().subscribe({
-      next: p => {
-        this.providers.set(p);
-        if (p.google && p.googleClientId) this.mountGoogleButton(p.googleClientId);
+    this.wakeApi();
+  }
+
+  /**
+   * The API runs on Container Apps with min-replicas 0, and its database auto-pauses. The first
+   * request after an idle period therefore pays for a container start plus a SQL resume, which can
+   * take the better part of a minute — and it used to surface as a login that simply failed, with
+   * the only workaround being to open the API's own URL first and then reload this page.
+   *
+   * Retrying the providers call *is* the wake-up: the request that times out is also the request
+   * that starts the container, so each attempt brings it closer to ready. The form stays disabled
+   * until one succeeds, so nobody can submit credentials into a container that is still booting.
+   */
+  private wakeApi(): void {
+    const started = Date.now();
+    const tick = setInterval(
+      () => this.wakeSeconds.set(Math.round((Date.now() - started) / 1000)), 1000);
+
+    // /api/system/ready opens a database connection, so a 200 means a sign-in will actually
+    // succeed. Probing /api/auth/providers instead would only prove the container had started,
+    // and would hand the SQL resume straight back to the login POST.
+    this.api.ready().pipe(
+      // ~90s of patience: comfortably longer than a cold container plus a SQL resume, and short
+      // enough that a genuinely dead API still reports itself rather than spinning forever.
+      retry({ count: 30, delay: () => timer(3000) })
+    ).subscribe({
+      next: () => {
+        clearInterval(tick);
+        this.apiReady.set(true);
+        this.sso.providers().subscribe({
+          next: p => {
+            this.providers.set(p);
+            if (p.google && p.googleClientId) this.mountGoogleButton(p.googleClientId);
+          },
+          error: () => undefined
+        });
+        this.api.status().subscribe({ next: s => this.status.set(s), error: () => undefined });
       },
-      error: () => undefined
+      error: () => {
+        clearInterval(tick);
+        this.wakeFailed.set(true);
+      }
     });
+  }
+
+  retryWake(): void {
+    this.wakeFailed.set(false);
+    this.wakeSeconds.set(0);
+    this.wakeApi();
   }
 
   /// The host element lives inside an `@if` that only renders once the providers response arrives,
