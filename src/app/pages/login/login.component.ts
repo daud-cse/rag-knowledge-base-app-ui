@@ -6,7 +6,7 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { SsoService } from '../../core/sso.service';
 import { apiMessage } from '../../core/http';
-import { AuthProviders, LoginResponse, ProviderStatus } from '../../core/models';
+import { AuthProviders, LoginResponse } from '../../core/models';
 
 interface DemoAccount {
   email: string;
@@ -37,7 +37,6 @@ export class LoginComponent implements AfterViewInit {
   readonly ssoBusy = signal(false);
   readonly error = signal<string | null>(null);
   readonly providers = signal<AuthProviders | null>(null);
-  readonly status = signal<ProviderStatus | null>(null);
 
   /** False until the API has answered once. The API scales to zero, so the first visit of the day
    *  has to wait for a container start and an Azure SQL resume. */
@@ -92,7 +91,6 @@ export class LoginComponent implements AfterViewInit {
           },
           error: () => undefined
         });
-        this.api.status().subscribe({ next: s => this.status.set(s), error: () => undefined });
       },
       error: () => {
         clearInterval(tick);

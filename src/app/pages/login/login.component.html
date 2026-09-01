@@ -13,15 +13,6 @@
       <li><span>📚</span> PDF, Word, Excel, PowerPoint, CSV, HTML and text ingestion</li>
       <li><span>🔎</span> Hybrid search, reranking and cited answers</li>
     </ul>
-
-    @if (status(); as s) {
-      <div class="stack">
-        <span class="chip">Database: {{ s.database }}</span>
-        <span class="chip">Vectors: {{ s.vectorStore }}</span>
-        <span class="chip">Storage: {{ s.storage }}</span>
-        <span class="chip" [class.live]="s.liveLlm">LLM: {{ s.llm }}</span>
-      </div>
-    }
   </section>
 
   <section class="form-side">
