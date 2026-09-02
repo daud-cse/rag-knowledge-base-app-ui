@@ -18,9 +18,9 @@ import { ToastService } from './core/toast.service';
       <div class="wake-bar" role="status" aria-live="polite">
         <span class="spinner"></span>
         <span>
-          <strong>Waking the server…</strong>
-          It sleeps when idle to stay free, so this can take up to a minute. Your page will fill in
-          on its own.
+          <strong>Server waking up</strong>
+          Pages may look empty until this finishes — nothing has been lost. It can take up to a
+          minute, then your data appears on its own.
         </span>
         @if (health.seconds() > 4) { <span class="wake-secs">{{ health.seconds() }}s</span> }
       </div>

@@ -340,8 +340,10 @@ table.data td.actions { text-align: right; white-space: nowrap; }
 /* ------------------------------- toasts ---------------------------------- */
 
 /* --------------------------- API wake-up banner ---------------------------- */
-/* Fixed rather than in-flow: it appears mid-session on whatever page the person is already on,
-   and pushing the layout down under them would be worse than overlaying it. */
+/* Deliberately loud. This appears mid-session on a page that is showing an empty table, and if it
+   reads as decoration the person concludes their data is gone rather than late. Fixed rather than
+   in-flow because it arrives on whatever page they are already on, and pushing the layout down
+   under them mid-read would be worse than covering the header for a few seconds. */
 .wake-bar {
   position: fixed;
   top: 0;
@@ -350,30 +352,63 @@ table.data td.actions { text-align: right; white-space: nowrap; }
   z-index: 95;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 16px;
-  background: var(--sidebar);
-  color: var(--text-inverse);
-  font-size: 13px;
+  gap: 12px;
+  padding: 13px 18px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1.45;
-  box-shadow: var(--shadow-lg);
-  animation: rise .16s ease-out;
+  border-bottom: 3px solid #8f281f;
+  box-shadow: 0 6px 22px rgba(192, 57, 47, .38);
+  animation: wake-in .18s ease-out;
 
-  strong { font-weight: 600; margin-right: 4px; }
+  strong {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .01em;
+    margin-right: 6px;
+    text-transform: uppercase;
+  }
 
-  .spinner { flex: none; }
+  /* The white-on-red spinner has to be redrawn: the shared one is tinted for light surfaces. */
+  .spinner {
+    flex: none;
+    width: 17px;
+    height: 17px;
+    border: 2.5px solid rgba(255, 255, 255, .45);
+    border-top-color: #fff;
+  }
 
   .wake-secs {
     margin-left: auto;
     font-family: var(--mono);
-    font-size: 12px;
-    opacity: .75;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .22);
     flex: none;
   }
 }
 
-@media (max-width: 560px) {
-  .wake-bar { padding: 8px 12px; font-size: 12px; gap: 8px; }
+@keyframes wake-in {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
+
+@media (max-width: 720px) {
+  .wake-bar {
+    padding: 10px 12px;
+    gap: 9px;
+    font-size: 13px;
+    strong { font-size: 13.5px; display: block; margin-right: 0; }
+    .wake-secs { font-size: 12px; padding: 2px 8px; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wake-bar { animation: none; }
 }
 
 .toast-host {
