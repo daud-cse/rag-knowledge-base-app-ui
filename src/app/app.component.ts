@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ApiHealthService } from './core/api-health.service';
+import { AuthService } from './core/auth.service';
 import { ToastService } from './core/toast.service';
 
 @Component({
@@ -7,6 +9,23 @@ import { ToastService } from './core/toast.service';
   standalone: true,
   imports: [RouterOutlet],
   template: `
+    <!--
+      The API sleeps when idle, so a signed-in person who steps away comes back to requests that
+      take most of a minute. Only shown once signed in: the login page runs its own readiness wait
+      and would otherwise say the same thing twice.
+    -->
+    @if (health.waking() && auth.isAuthenticated()) {
+      <div class="wake-bar" role="status" aria-live="polite">
+        <span class="spinner"></span>
+        <span>
+          <strong>Waking the server…</strong>
+          It sleeps when idle to stay free, so this can take up to a minute. Your page will fill in
+          on its own.
+        </span>
+        @if (health.seconds() > 4) { <span class="wake-secs">{{ health.seconds() }}s</span> }
+      </div>
+    }
+
     <router-outlet />
 
     <div class="toast-host">
@@ -21,4 +40,6 @@ import { ToastService } from './core/toast.service';
 })
 export class AppComponent {
   readonly toasts = inject(ToastService);
+  readonly health = inject(ApiHealthService);
+  readonly auth = inject(AuthService);
 }

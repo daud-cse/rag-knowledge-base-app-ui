@@ -339,6 +339,43 @@ table.data td.actions { text-align: right; white-space: nowrap; }
 
 /* ------------------------------- toasts ---------------------------------- */
 
+/* --------------------------- API wake-up banner ---------------------------- */
+/* Fixed rather than in-flow: it appears mid-session on whatever page the person is already on,
+   and pushing the layout down under them would be worse than overlaying it. */
+.wake-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  background: var(--sidebar);
+  color: var(--text-inverse);
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: var(--shadow-lg);
+  animation: rise .16s ease-out;
+
+  strong { font-weight: 600; margin-right: 4px; }
+
+  .spinner { flex: none; }
+
+  .wake-secs {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    opacity: .75;
+    flex: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .wake-bar { padding: 8px 12px; font-size: 12px; gap: 8px; }
+}
+
 .toast-host {
   position: fixed;
   right: 18px;
