@@ -6,7 +6,8 @@ import {
   DocumentItem, KnowledgeBase, KnowledgeBaseLink, LoginResponse, Paged, ProviderStatus, Role, Tenant,
   Tool,
   ToolInvocation,
-  McpImportResult
+  McpImportResult,
+  ConnectorApp
 } from './models';
 
 /** One place that knows the shape of the API, so components stay declarative. */
@@ -197,6 +198,9 @@ export class ApiService {
     let params = new HttpParams();
     if (type) params = params.set('type', type);
     return this.http.get<Tool[]>('/api/tools', { params });
+  }
+  connectorApps(): Observable<ConnectorApp[]> {
+    return this.http.get<ConnectorApp[]>('/api/tools/connector-apps');
   }
   createTool(body: unknown): Observable<Tool> {
     return this.http.post<Tool>('/api/tools', body);

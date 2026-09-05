@@ -317,3 +317,12 @@ export interface ToolCallSummary {
 }
 
 export interface ToolLink { toolId: string; name: string; type: string; operationCount: number; }
+
+/** A third-party application a connector tool can target. */
+export interface ConnectorApp {
+  key: string;
+  name: string;
+  category: string;
+  description: string;
+  colour: string;
+}
