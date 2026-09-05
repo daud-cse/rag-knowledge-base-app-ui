@@ -147,6 +147,7 @@ export interface Chatbot {
   isActive: boolean;
   createdAt: string;
   knowledgeBases: KnowledgeBaseLink[];
+  tools: ToolLink[];
 }
 
 export interface Citation {
@@ -252,3 +253,67 @@ export interface ProviderStatus {
   liveLlm: boolean;
   notice: string | null;
 }
+
+// ---------- tools ----------
+export interface ToolOperation {
+  id: string;
+  name: string;
+  description: string;
+  httpMethod: string | null;
+  path: string | null;
+  parametersJson: string;
+  isReadOnly: boolean;
+  isActive: boolean;
+}
+
+export interface Tool {
+  id: string;
+  type: 'Api' | 'Mcp' | 'Connector';
+  name: string;
+  description: string;
+  baseUrl: string | null;
+  connectorApp: string | null;
+  authType: string;
+  authHeaderName: string | null;
+  /** The secret itself never leaves the server; this only says whether one is stored. */
+  hasSecret: boolean;
+  humanApproval: 'Auto' | 'Always' | 'Never';
+  isActive: boolean;
+  lastError: string | null;
+  operationsRefreshedAt: string | null;
+  createdAt: string;
+  operations: ToolOperation[];
+}
+
+export interface ToolInvocation {
+  id: string;
+  toolId: string;
+  toolName: string;
+  operationName: string;
+  argumentsJson: string;
+  status: 'PendingApproval' | 'Rejected' | 'Succeeded' | 'Failed';
+  resultJson: string | null;
+  error: string | null;
+  durationMs: number;
+  conversationId: string | null;
+  userEmail: string | null;
+  createdAt: string;
+}
+
+export interface McpImportResult {
+  imported: number;
+  skipped: number;
+  names: string[];
+  warnings: string[];
+}
+
+/** A tool the assistant used while answering, surfaced next to the message. */
+export interface ToolCallSummary {
+  tool: string;
+  operation: string;
+  status: string;
+  error: string | null;
+  invocationId: string | null;
+}
+
+export interface ToolLink { toolId: string; name: string; type: string; operationCount: number; }

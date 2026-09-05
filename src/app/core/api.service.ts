@@ -3,7 +3,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   AnalyticsSummary, AppUser, AuditEntry, Chatbot, ChatMessage, ChatResponse, Chunk, Conversation,
-  DocumentItem, KnowledgeBase, KnowledgeBaseLink, LoginResponse, Paged, ProviderStatus, Role, Tenant
+  DocumentItem, KnowledgeBase, KnowledgeBaseLink, LoginResponse, Paged, ProviderStatus, Role, Tenant,
+  Tool,
+  ToolInvocation,
+  McpImportResult
 } from './models';
 
 /** One place that knows the shape of the API, so components stay declarative. */
@@ -189,6 +192,48 @@ export class ApiService {
   }
   /** Readiness probe. Opens a database connection server-side, so a 200 means the API can
    *  actually serve a sign-in — not merely that the container has started. */
+  // ---------- tools ----------
+  tools(type?: string): Observable<Tool[]> {
+    let params = new HttpParams();
+    if (type) params = params.set('type', type);
+    return this.http.get<Tool[]>('/api/tools', { params });
+  }
+  createTool(body: unknown): Observable<Tool> {
+    return this.http.post<Tool>('/api/tools', body);
+  }
+  updateTool(id: string, body: unknown): Observable<Tool> {
+    return this.http.put<Tool>(`/api/tools/${id}`, body);
+  }
+  deleteTool(id: string): Observable<void> {
+    return this.http.delete<void>(`/api/tools/${id}`);
+  }
+  refreshTool(id: string): Observable<Tool> {
+    return this.http.post<Tool>(`/api/tools/${id}/refresh`, {});
+  }
+  addToolOperation(id: string, body: unknown): Observable<Tool> {
+    return this.http.post<Tool>(`/api/tools/${id}/operations`, body);
+  }
+  deleteToolOperation(id: string, operationId: string): Observable<void> {
+    return this.http.delete<void>(`/api/tools/${id}/operations/${operationId}`);
+  }
+  importMcp(configuration: string, humanApproval = 'Auto'): Observable<McpImportResult> {
+    return this.http.post<McpImportResult>('/api/tools/import-mcp', { configuration, humanApproval });
+  }
+  toolInvocations(status?: string): Observable<ToolInvocation[]> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    return this.http.get<ToolInvocation[]>('/api/tools/invocations', { params });
+  }
+  approveInvocation(id: string): Observable<ToolInvocation> {
+    return this.http.post<ToolInvocation>(`/api/tools/invocations/${id}/approve`, {});
+  }
+  rejectInvocation(id: string): Observable<void> {
+    return this.http.post<void>(`/api/tools/invocations/${id}/reject`, {});
+  }
+  mapChatbotTools(chatbotId: string, toolIds: string[]): Observable<Chatbot> {
+    return this.http.put<Chatbot>(`/api/chatbots/${chatbotId}/tools`, { toolIds });
+  }
+
   ready(): Observable<{ ready: boolean }> {
     return this.http.get<{ ready: boolean }>('/api/system/ready');
   }
