@@ -1,11 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { apiMessage } from '../../core/http';
 import { ToastService } from '../../core/toast.service';
-import { Chatbot, KnowledgeBase } from '../../core/models';
+import { Chatbot, KnowledgeBase, Tool} from '../../core/models';
 
-type Tab = 'general' | 'rag' | 'knowledge' | 'chat';
+type Tab = 'general' | 'rag' | 'knowledge' | 'tools' | 'chat';
 
 @Component({
   selector: 'app-chatbots',
@@ -59,6 +59,15 @@ type Tab = 'general' | 'rag' | 'knowledge' | 'chat';
                   <span class="muted small">None mapped — this chatbot has nothing to retrieve from.</span>
                 }
               </div>
+
+              @if (bot.tools?.length) {
+                <p class="label" style="margin:14px 0 5px">Tools</p>
+                <div class="chips">
+                  @for (t of bot.tools; track t.toolId) {
+                    <span class="badge">🔧 {{ t.name }}</span>
+                  }
+                </div>
+              }
             </div>
             <div class="card-head" style="border-top:1px solid var(--border);border-bottom:none">
               <button class="btn sm" type="button" (click)="edit(bot)">Configure</button>
@@ -222,6 +231,55 @@ type Tab = 'general' | 'rag' | 'knowledge' | 'chat';
                 }
               }
 
+              @case ('tools') {
+                <p class="muted small">
+                  Browse and select existing tools to add to this assistant. A tool is only
+                  reachable once it is selected here, so registering one does not expose it to
+                  every chatbot in the company.
+                </p>
+
+                <div class="tool-tabs">
+                  @for (g of toolGroups; track g.key) {
+                    <button type="button" class="tool-tab" [class.active]="toolTab() === g.key"
+                            (click)="toolTab.set(g.key)">
+                      {{ g.label }} <span class="count">{{ toolsOfType(g.key).length }}</span>
+                    </button>
+                  }
+                </div>
+
+                <label class="field">
+                  <input type="search" [ngModel]="toolSearch()" (ngModelChange)="toolSearch.set($event)"
+                         name="toolsearch" placeholder="Search tools…" />
+                </label>
+
+                @for (tool of filteredTools(); track tool.id) {
+                  <div class="kb-row">
+                    <label class="check" style="margin:0;flex:1">
+                      <input type="checkbox" [checked]="isToolSelected(tool.id)"
+                             (change)="toggleTool(tool.id)" />
+                      <span class="check-text">
+                        <strong>{{ tool.name }}</strong>
+                        <span>{{ tool.description }}</span>
+                        <span class="muted small">
+                          {{ tool.operations.length }} operation{{ tool.operations.length === 1 ? '' : 's' }}
+                          · {{ approvalLabel(tool.humanApproval) }}
+                          @if (!tool.isActive) { · disabled }
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                } @empty {
+                  <div class="empty">
+                    <span class="icon">🔧</span>
+                    {{ toolSearch() ? 'No tools match that search.' : 'No tools available.' }}
+                  </div>
+                }
+
+                <p class="muted small" style="margin-top:12px">
+                  {{ selectedToolCount() }} tool{{ selectedToolCount() === 1 ? '' : 's' }} selected
+                </p>
+              }
+
               @case ('chat') {
                 <label class="field">
                   <span class="label">Welcome message</span>
@@ -310,6 +368,13 @@ type Tab = 'general' | 'rag' | 'knowledge' | 'chat';
       color: var(--text-muted);
       cursor: pointer;
     }
+    .tool-tabs { display: flex; gap: 7px; margin: 12px 0 4px; }
+    .tool-tab {
+      font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--border-strong); background: var(--surface); color: var(--text);
+    }
+    .tool-tab.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .tool-tab .count { opacity: .65; margin-left: 4px; font-variant-numeric: tabular-nums; }
     .tabs button:hover { color: var(--text); }
     .tabs button.active { color: var(--brand); border-bottom-color: var(--brand); }
 
@@ -363,12 +428,49 @@ export class ChatbotsComponent {
     { key: 'general', label: 'General' },
     { key: 'rag', label: 'Retrieval' },
     { key: 'knowledge', label: 'Knowledge bases' },
+    { key: 'tools', label: 'Tools' },
     { key: 'chat', label: 'Chat experience' }
   ];
 
   form = this.blank();
   suggestedText = '';
   private mapping = new Map<string, number>();
+
+  // ---- tools ----
+  readonly allTools = signal<Tool[]>([]);
+  readonly toolTab = signal<'Api' | 'Mcp' | 'Connector'>('Api');
+  readonly toolSearch = signal('');
+  private selectedTools = new Set<string>();
+
+  readonly toolGroups: { key: 'Api' | 'Mcp' | 'Connector'; label: string }[] = [
+    { key: 'Api', label: 'Tool' },
+    { key: 'Mcp', label: 'MCP Server' },
+    { key: 'Connector', label: 'Connectors' }
+  ];
+
+  readonly filteredTools = computed(() => {
+    const term = this.toolSearch().trim().toLowerCase();
+    return this.allTools()
+      .filter(t => t.type === this.toolTab())
+      .filter(t => !term || t.name.toLowerCase().includes(term)
+                          || t.description.toLowerCase().includes(term));
+  });
+
+  toolsOfType(type: string): Tool[] { return this.allTools().filter(t => t.type === type); }
+  isToolSelected(id: string): boolean { return this.selectedTools.has(id); }
+  selectedToolCount(): number { return this.selectedTools.size; }
+
+  toggleTool(id: string): void {
+    if (this.selectedTools.has(id)) this.selectedTools.delete(id);
+    else this.selectedTools.add(id);
+    // A Set mutates in place, so nothing the template reads would otherwise change.
+    this.selectedTools = new Set(this.selectedTools);
+  }
+
+  approvalLabel(mode: string): string {
+    return mode === 'Always' ? 'always asks' : mode === 'Never' ? 'never asks' : 'asks before writes';
+  }
+
 
   constructor() {
     this.load();
@@ -402,6 +504,8 @@ export class ChatbotsComponent {
     this.form = this.blank();
     this.suggestedText = '';
     this.mapping = new Map();
+    this.selectedTools = new Set();
+    this.loadTools();
     this.tab.set('general');
     this.editing.set({});
   }
@@ -420,12 +524,23 @@ export class ChatbotsComponent {
     };
     this.suggestedText = bot.suggestedQuestions.join('\n');
     this.mapping = new Map(bot.knowledgeBases.map(kb => [kb.knowledgeBaseId, kb.priority]));
+    this.selectedTools = new Set((bot.tools ?? []).map(t => t.toolId));
+    this.loadTools();
     this.tab.set('general');
     this.editing.set(bot);
   }
 
   close(): void {
     this.editing.set(null);
+  }
+
+  /// Loaded when the dialog opens rather than with the page: most visits never reach this tab, and
+  /// the list has to be current when they do.
+  private loadTools(): void {
+    this.api.tools().subscribe({
+      next: t => this.allTools.set(t),
+      error: () => this.allTools.set([])
+    });
   }
 
   isMapped(id: string): boolean {
@@ -482,6 +597,17 @@ export class ChatbotsComponent {
       .map(([knowledgeBaseId, priority]) => ({ knowledgeBaseId, name: '', priority }));
 
     this.api.mapKnowledgeBases(bot.id, links).subscribe({
+      next: () => this.applyToolMapping(bot),
+      error: err => {
+        this.saving.set(false);
+        this.load();
+        this.toast.error(apiMessage(err, 'Saved, but the knowledge-base mapping failed.'));
+      }
+    });
+  }
+
+  private applyToolMapping(bot: Chatbot): void {
+    this.api.mapChatbotTools(bot.id, [...this.selectedTools]).subscribe({
       next: () => {
         this.saving.set(false);
         this.editing.set(null);
@@ -491,7 +617,7 @@ export class ChatbotsComponent {
       error: err => {
         this.saving.set(false);
         this.load();
-        this.toast.error(apiMessage(err, 'Saved, but the knowledge-base mapping failed.'));
+        this.toast.error(apiMessage(err, 'Saved, but the tool selection failed.'));
       }
     });
   }
