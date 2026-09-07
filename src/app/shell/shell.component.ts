@@ -37,6 +37,7 @@ export class ShellComponent {
     { label: 'Dashboard', icon: '📊', link: '/admin/dashboard', minRole: 'ChatbotAdmin' },
     { label: 'Chatbots', icon: '🤖', link: '/admin/chatbots', minRole: 'ChatbotAdmin' },
     { label: 'Tools', icon: '🔧', link: '/admin/tools', minRole: 'ChatbotAdmin' },
+    { label: 'Skills', icon: '📚', link: '/admin/skills', minRole: 'ChatbotAdmin' },
     { label: 'Users & roles', icon: '👥', link: '/admin/users', minRole: 'CompanyAdmin', companyOnly: true },
     { label: 'Audit log', icon: '🗂️', link: '/admin/audit', minRole: 'CompanyAdmin' },
     { label: 'Companies', icon: '🏢', link: '/admin/tenants', minRole: 'SuperAdmin' }

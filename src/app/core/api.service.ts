@@ -7,7 +7,9 @@ import {
   Tool,
   ToolInvocation,
   McpImportResult,
-  ConnectorApp
+  ConnectorApp,
+  Skill,
+  SkillImportResult
 } from './models';
 
 /** One place that knows the shape of the API, so components stay declarative. */
@@ -199,6 +201,33 @@ export class ApiService {
     if (type) params = params.set('type', type);
     return this.http.get<Tool[]>('/api/tools', { params });
   }
+  // ---------- skills ----------
+  skills(onlyInstalled = false, search?: string): Observable<Skill[]> {
+    let params = new HttpParams().set('onlyInstalled', onlyInstalled);
+    if (search) params = params.set('search', search);
+    return this.http.get<Skill[]>('/api/skills', { params });
+  }
+  createSkill(body: unknown): Observable<Skill> {
+    return this.http.post<Skill>('/api/skills', body);
+  }
+  updateSkill(id: string, body: unknown): Observable<Skill> {
+    return this.http.put<Skill>(`/api/skills/${id}`, body);
+  }
+  deleteSkill(id: string): Observable<void> {
+    return this.http.delete<void>(`/api/skills/${id}`);
+  }
+  setSkillInstalled(id: string, installed: boolean): Observable<Skill> {
+    return this.http.post<Skill>(`/api/skills/${id}/install?installed=${installed}`, {});
+  }
+  importSkill(file: File): Observable<SkillImportResult> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<SkillImportResult>('/api/skills/import', form);
+  }
+  mapChatbotSkills(chatbotId: string, skillIds: string[]): Observable<Chatbot> {
+    return this.http.put<Chatbot>(`/api/chatbots/${chatbotId}/skills`, { skillIds });
+  }
+
   connectorApps(): Observable<ConnectorApp[]> {
     return this.http.get<ConnectorApp[]>('/api/tools/connector-apps');
   }

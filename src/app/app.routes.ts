@@ -40,6 +40,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin/documents.component').then(m => m.DocumentsComponent)
       },
       {
+        path: 'admin/skills',
+        canActivate: [roleGuard('ChatbotAdmin')],
+        loadComponent: () => import('./pages/admin/skills.component').then(m => m.SkillsComponent)
+      },
+      {
         path: 'admin/tools',
         canActivate: [roleGuard('ChatbotAdmin')],
         loadComponent: () => import('./pages/admin/tools.component').then(m => m.ToolsComponent)

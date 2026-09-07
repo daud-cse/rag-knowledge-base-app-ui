@@ -148,6 +148,7 @@ export interface Chatbot {
   createdAt: string;
   knowledgeBases: KnowledgeBaseLink[];
   tools: ToolLink[];
+  skills: SkillLink[];
 }
 
 export interface Citation {
@@ -325,4 +326,32 @@ export interface ConnectorApp {
   category: string;
   description: string;
   colour: string;
+}
+
+// ---------- skills ----------
+export interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  tags: string | null;
+  instructions: string;
+  version: string;
+  isInstalled: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  tools: ToolLink[];
+}
+
+export interface SkillImportResult {
+  imported: number;
+  skipped: number;
+  names: string[];
+  warnings: string[];
+}
+
+export interface SkillLink {
+  skillId: string;
+  name: string;
+  description: string;
 }

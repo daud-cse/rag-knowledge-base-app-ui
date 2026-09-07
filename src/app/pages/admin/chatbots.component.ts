@@ -3,9 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { apiMessage } from '../../core/http';
 import { ToastService } from '../../core/toast.service';
-import { Chatbot, KnowledgeBase, Tool} from '../../core/models';
+import { Chatbot, KnowledgeBase, Tool, Skill} from '../../core/models';
 
-type Tab = 'general' | 'rag' | 'knowledge' | 'tools' | 'chat';
+type Tab = 'general' | 'rag' | 'knowledge' | 'tools' | 'skills' | 'chat';
 
 @Component({
   selector: 'app-chatbots',
@@ -65,6 +65,15 @@ type Tab = 'general' | 'rag' | 'knowledge' | 'tools' | 'chat';
                 <div class="chips">
                   @for (t of bot.tools; track t.toolId) {
                     <span class="badge">🔧 {{ t.name }}</span>
+                  }
+                </div>
+              }
+
+              @if (bot.skills?.length) {
+                <p class="label" style="margin:14px 0 5px">Skills</p>
+                <div class="chips">
+                  @for (s of bot.skills; track s.skillId) {
+                    <span class="badge">📚 {{ s.name }}</span>
                   }
                 </div>
               }
@@ -280,6 +289,48 @@ type Tab = 'general' | 'rag' | 'knowledge' | 'tools' | 'chat';
                 </p>
               }
 
+              @case ('skills') {
+                <p class="muted small">
+                  Skills this assistant may adopt. The model reads each description and decides
+                  whether one applies to the question, so a skill is a way to give it a procedure
+                  for a task rather than a rule it always follows.
+                </p>
+
+                <label class="field">
+                  <input type="search" [ngModel]="skillSearch()" (ngModelChange)="skillSearch.set($event)"
+                         name="skillsearch" placeholder="Search skills…" />
+                </label>
+
+                @for (skill of filteredSkills(); track skill.id) {
+                  <div class="kb-row">
+                    <label class="check" style="margin:0;flex:1">
+                      <input type="checkbox" [checked]="isSkillSelected(skill.id)"
+                             (change)="toggleSkill(skill.id)" />
+                      <span class="check-text">
+                        <strong>{{ skill.name }}</strong>
+                        <span>{{ skill.description }}</span>
+                        <span class="muted small">
+                          v{{ skill.version }}
+                          @if (skill.tools.length > 0) {
+                            · brings {{ skill.tools.length }} tool{{ skill.tools.length === 1 ? '' : 's' }}
+                          }
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                } @empty {
+                  <div class="empty">
+                    <span class="icon">📚</span>
+                    {{ skillSearch() ? 'No skills match that search.'
+                                     : 'No installed skills yet. Create one on the Skills page.' }}
+                  </div>
+                }
+
+                <p class="muted small" style="margin-top:12px">
+                  {{ selectedSkillCount() }} skill{{ selectedSkillCount() === 1 ? '' : 's' }} selected
+                </p>
+              }
+
               @case ('chat') {
                 <label class="field">
                   <span class="label">Welcome message</span>
@@ -429,6 +480,7 @@ export class ChatbotsComponent {
     { key: 'rag', label: 'Retrieval' },
     { key: 'knowledge', label: 'Knowledge bases' },
     { key: 'tools', label: 'Tools' },
+    { key: 'skills', label: 'Skills' },
     { key: 'chat', label: 'Chat experience' }
   ];
 
@@ -455,6 +507,28 @@ export class ChatbotsComponent {
       .filter(t => !term || t.name.toLowerCase().includes(term)
                           || t.description.toLowerCase().includes(term));
   });
+
+  // ---- skills ----
+  readonly allSkills = signal<Skill[]>([]);
+  readonly skillSearch = signal('');
+  private selectedSkills = new Set<string>();
+
+  readonly filteredSkills = computed(() => {
+    const term = this.skillSearch().trim().toLowerCase();
+    return this.allSkills().filter(s => !term
+      || s.name.toLowerCase().includes(term)
+      || s.description.toLowerCase().includes(term)
+      || (s.tags ?? '').toLowerCase().includes(term));
+  });
+
+  isSkillSelected(id: string): boolean { return this.selectedSkills.has(id); }
+  selectedSkillCount(): number { return this.selectedSkills.size; }
+
+  toggleSkill(id: string): void {
+    if (this.selectedSkills.has(id)) this.selectedSkills.delete(id);
+    else this.selectedSkills.add(id);
+    this.selectedSkills = new Set(this.selectedSkills);
+  }
 
   toolsOfType(type: string): Tool[] { return this.allTools().filter(t => t.type === type); }
   isToolSelected(id: string): boolean { return this.selectedTools.has(id); }
@@ -505,6 +579,7 @@ export class ChatbotsComponent {
     this.suggestedText = '';
     this.mapping = new Map();
     this.selectedTools = new Set();
+    this.selectedSkills = new Set();
     this.loadTools();
     this.tab.set('general');
     this.editing.set({});
@@ -525,6 +600,7 @@ export class ChatbotsComponent {
     this.suggestedText = bot.suggestedQuestions.join('\n');
     this.mapping = new Map(bot.knowledgeBases.map(kb => [kb.knowledgeBaseId, kb.priority]));
     this.selectedTools = new Set((bot.tools ?? []).map(t => t.toolId));
+    this.selectedSkills = new Set((bot.skills ?? []).map(s => s.skillId));
     this.loadTools();
     this.tab.set('general');
     this.editing.set(bot);
@@ -540,6 +616,11 @@ export class ChatbotsComponent {
     this.api.tools().subscribe({
       next: t => this.allTools.set(t),
       error: () => this.allTools.set([])
+    });
+    // Only installed skills can be attached, so the picker asks for exactly those.
+    this.api.skills(true).subscribe({
+      next: s => this.allSkills.set(s),
+      error: () => this.allSkills.set([])
     });
   }
 
@@ -608,6 +689,17 @@ export class ChatbotsComponent {
 
   private applyToolMapping(bot: Chatbot): void {
     this.api.mapChatbotTools(bot.id, [...this.selectedTools]).subscribe({
+      next: () => this.applySkillMapping(bot),
+      error: err => {
+        this.saving.set(false);
+        this.load();
+        this.toast.error(apiMessage(err, 'Saved, but the tool selection failed.'));
+      }
+    });
+  }
+
+  private applySkillMapping(bot: Chatbot): void {
+    this.api.mapChatbotSkills(bot.id, [...this.selectedSkills]).subscribe({
       next: () => {
         this.saving.set(false);
         this.editing.set(null);
@@ -617,7 +709,7 @@ export class ChatbotsComponent {
       error: err => {
         this.saving.set(false);
         this.load();
-        this.toast.error(apiMessage(err, 'Saved, but the tool selection failed.'));
+        this.toast.error(apiMessage(err, 'Saved, but the skill selection failed.'));
       }
     });
   }
