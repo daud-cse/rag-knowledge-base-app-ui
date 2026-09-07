@@ -307,13 +307,17 @@ type Tab = 'general' | 'rag' | 'knowledge' | 'tools' | 'skills' | 'chat';
                       <input type="checkbox" [checked]="isSkillSelected(skill.id)"
                              (change)="toggleSkill(skill.id)" />
                       <span class="check-text">
-                        <strong>{{ skill.name }}</strong>
+                        <strong>
+                          {{ skill.name }}
+                          @if (!skill.isActive) { <span class="badge bad">inactive</span> }
+                        </strong>
                         <span>{{ skill.description }}</span>
                         <span class="muted small">
                           v{{ skill.version }}
                           @if (skill.tools.length > 0) {
                             · brings {{ skill.tools.length }} tool{{ skill.tools.length === 1 ? '' : 's' }}
                           }
+                          @if (!skill.isActive) { · never offered to the model while inactive }
                         </span>
                       </span>
                     </label>
