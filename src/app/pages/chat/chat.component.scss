@@ -281,6 +281,32 @@
   padding-left: 41px;
 }
 
+/* What the assistant used to produce an answer. Shown on the message rather than in a log, so the
+   question "did my skill fire?" is answered where it is asked. */
+.used {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.used-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.used-chip.skill  { background: var(--brand-soft);  color: var(--brand);  border-color: var(--brand); }
+.used-chip.tool   { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.used-chip.waiting{ background: var(--warn-soft);   color: var(--warn);   border-color: var(--warn); }
+.used-chip.failed { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+
 /* ------------------------------- composer -------------------------------- */
 
 .composer {

@@ -183,6 +183,8 @@ export interface ChatMessage {
   noAnswer: boolean;
   feedback: 'None' | 'ThumbsUp' | 'ThumbsDown';
   createdAt: string;
+  /** Skills adopted and tools run while composing this answer. */
+  toolCalls?: ToolCallSummary[];
   /** Client-only marker for the streaming placeholder row. */
   pending?: boolean;
 }

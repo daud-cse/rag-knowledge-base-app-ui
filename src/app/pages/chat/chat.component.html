@@ -104,6 +104,30 @@
             } @else {
               <div class="bubble" [innerHTML]="render(message)"></div>
 
+              @if (message.role === 'Assistant' && message.toolCalls?.length) {
+                <div class="used">
+                  @for (call of message.toolCalls; track call.tool + call.operation) {
+                    @if (call.operation === 'skill') {
+                      <span class="used-chip skill" title="The assistant adopted this skill">
+                        📚 skill: {{ call.tool }}
+                      </span>
+                    } @else if (call.status === 'awaiting approval') {
+                      <span class="used-chip waiting" title="Waiting for a person to approve this">
+                        ⏸ {{ call.tool }}.{{ call.operation }} — awaiting approval
+                      </span>
+                    } @else if (call.status === 'ran') {
+                      <span class="used-chip tool" title="This tool ran">
+                        🔧 {{ call.tool }}.{{ call.operation }}
+                      </span>
+                    } @else {
+                      <span class="used-chip failed" [title]="call.error || 'This call did not succeed'">
+                        ⚠ {{ call.tool }}.{{ call.operation }} — {{ call.status }}
+                      </span>
+                    }
+                  }
+                </div>
+              }
+
               @if (message.role === 'Assistant') {
                 <div class="tools">
                   @if (message.citations.length) {
