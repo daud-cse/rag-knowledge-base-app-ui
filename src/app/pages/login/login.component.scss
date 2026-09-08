@@ -275,15 +275,12 @@
   border-top: 1px solid var(--border);
   text-align: center;
   font-size: 12px;
-  line-height: 1.6;
   color: var(--text-muted);
-  text-wrap: balance;
 
   a {
     color: var(--text-muted);
     text-decoration: underline;
     text-underline-offset: 2px;
-    white-space: nowrap;
 
     &:hover { color: var(--brand); }
   }
