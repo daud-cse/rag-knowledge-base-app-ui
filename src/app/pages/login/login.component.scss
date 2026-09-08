@@ -264,3 +264,24 @@
   color: var(--text-muted);
   margin-left: 4px;
 }
+
+/* ---------------------------- author credit ------------------------------ */
+
+/* Inside the card rather than pinned to the viewport: the right pane scrolls on short
+   screens, and a fixed footer would sit on top of the demo accounts on mobile. */
+.credit {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+
+  a {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover { color: var(--brand); }
+  }
+}

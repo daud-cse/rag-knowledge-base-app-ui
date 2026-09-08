@@ -42,6 +42,12 @@
           </span>
         </div>
       }
+
+      <p class="credit">
+        Developed by
+        <a href="https://www.linkedin.com/in/daudul-islam-daud-39086ab3/"
+           target="_blank" rel="noopener noreferrer">Daudul Islam</a>
+      </p>
     </div>
   </aside>
 
@@ -75,6 +81,11 @@
                 {{ auth.user()?.identityProvider }}</small>
             </div>
             <button class="btn ghost block" type="button" (click)="auth.logout()">Sign out</button>
+            <p class="menu-credit">
+              Developed by
+              <a href="https://www.linkedin.com/in/daudul-islam-daud-39086ab3/"
+                 target="_blank" rel="noopener noreferrer">Daudul Islam</a>
+            </p>
           </div>
         }
       </div>
