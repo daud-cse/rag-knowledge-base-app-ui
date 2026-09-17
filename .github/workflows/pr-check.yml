@@ -1,0 +1,27 @@
+name: pr-check-ui
+
+# Builds every pull request into dev or main, so a change that does not compile
+# can never be merged. Deployment stays in deploy.yml and runs on main only.
+on:
+  pull_request:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Production build
+        run: npm run build -- --configuration production
